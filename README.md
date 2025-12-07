@@ -11,4 +11,4 @@ Welcome to the first easy-to-use terminal that will not make your head explote! 
 
 If you have problems, you can do a "Issues".
 
-This proyect was only created by me. so if you could suport me by following i will be happy!
+This proyect was only created by me. So if you could suport me by following, i will be happy!
