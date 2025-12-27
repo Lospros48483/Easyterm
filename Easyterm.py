@@ -4,6 +4,12 @@ import shutil
 import pyttsx3
 import threading
 import ctypes
+import qrcode
+import cv2
+from pyzbar.pyzbar import decode
+import random
+import art
+
 
 ask = ""
 temp = ""
@@ -16,7 +22,7 @@ try:
 except:
     usurname = os.environ['USER']
 dir = os.getcwd()
-version = "1.0.0"
+version = "1.1.0"
 
 def clear() -> None:
     if os_ver == "Windows":
@@ -105,14 +111,18 @@ os -> Run this and tells what os you have. Command: os.
 say -> Print's the text that you put. Command: say [text]
 talk -> Says the text that you put. Command: talk [text]
 python -> Activate python. Command: python
-message -> Put's a massage but the styles are: 0 : OK, 1 : OK | Cancel, 2 : Abort | Retry | Ignore, 3 : Yes | No | Cancel, 4 : Yes | No, 5 : Retry | Cancel , 6 : Cancel | Try Again | Continue. Command: message ( [title] ) [text] [style]
+message -> Put's a massage but the styles are: 0 : OK, 1 : OK | Cancel, 2 : Abort | Retry | Ignore, 3 : Yes | No | Cancel, 4 : Yes | No, 5 : Retry | Cancel , 6 : Cancel | Try Again | Continue. Command: message ([title]) [text] [style]
 download -> Let's you download anything from anyware. Command: download [URL] [file name]
 remote -> To access someones computer with there ip adrres. Command: remote [ip adrres]
 kill -> To kill a program that is running. Command: kill [name of the program]
 unzip -> To unzip a .zip file. Command: unzip [File]
 ver -> To see in what version is the program. Command: ver
 open -> You can open websides and files! Command: open [file name or URL (with www.)]
-credit -> Tell's you who did it! Command: credit""")
+credit -> Tell's you who did it! Command: credit
+qr -> You can creat qr codes of any type, it will go to your selected dirrectory! Command: qr ([text or url])
+qrscan -> You can scan qr codes to get it's info, it will go to your selected dirrectory to get the file! Command: qrscan [file name + extension]
+random -> You can random any number but no text! Command: random [first number] [second number]
+find -> You can look up the file name with extension and find the dirrectory it is! Command: find [file name + extension]""")
     elif cmd == "clear":
         clear()
     elif cmd == "edit":
@@ -232,28 +242,33 @@ credit -> Tell's you who did it! Command: credit""")
             except IndexError:
                 os.system("python3")
     elif cmd == "message":
-        tokens = ask.split()
+        length: int
+        tokens = list(ask)
+        token = ask.split()
         
-        if len(tokens) < 4: pass
+        if len(tokens) < 8: pass
         else:
-            title = ""
+            title = ''
             try:
                 clauses_start = tokens.index('(')
                 clauses_end = tokens.index(')')
                 length = clauses_end - clauses_start - 1
             except:
-                title = ""
-                
-            for i in range(length):
-                title = title + " " +tokens[i + 2]
+                title = ''
             
-            style_token = tokens[-1]
+            if title == '':
+                for i in range(length):
+                    title = title + tokens[i + 9]
+            else:
+                title = ''
+            
+            style_token = token[-1]
             try:
                 style = int(style_token)
             except ValueError:
                 print("Style must be an integer. See help for valid styles. If not, type help.")
             else:
-                text = " ".join(tokens[clauses_end + 1:-1])
+                text = "".join(tokens[clauses_end + 1:-1])
                 Message(title, text, style)
     elif cmd == "download":
         try:
@@ -301,5 +316,92 @@ credit -> Tell's you who did it! Command: credit""")
                 os.system(f"open {ask.split()[1]}")
         except IndexError:
             print('Please put a file or a URL with "www.". If not, type help.')
+    elif cmd == "qr":
+        length: int
+        data = ''
+        tokens = list(ask)
+        
+        if len(tokens) < 3: pass
+        else:
+            data = ''
+            try:
+                clauses_start = tokens.index('(')
+                clauses_end = tokens.index(')')
+                length = clauses_end - clauses_start - 1
+            except:
+                data = ""
+            
+            if data == "":
+                for i in range(length):
+                    data = data + tokens[i + 4]
+            else:
+                data = ''
+        
+        img = qrcode.make(data)
+        
+        if os_ver == "Windows":
+            with open(rf"{dir}\qrcode.png", "wb") as f:
+                img.save(f)
+        else:
+            with open(f"{dir}/qrcode.png", "wb") as f:
+                img.save(f)
+    elif cmd == "qrscan":
+        token = ask.split()[1:]
+        try:
+            datas = " ".join(token)
+        except IndexError:
+            print("Please put a flie name and flie extension. if not, type help.")
+        
+        if os_ver == "Windows":
+            image = cv2.imread(rf"{dir}\{datas}")
+        else:
+            image = cv2.imread(f"{dir}/{datas}")
+
+        if image is None:
+            print("Could not load image. Please provide a valid file or go to the directorry. If not, type help.")
+        else:
+            codes = decode(image)
+            
+            for code in codes:
+                data = code.data.decode('utf-8')
+
+            if data:
+                print(f"The QR code has {data}")
+            else:
+                print("No QR code detected.")
+    elif cmd == "random":
+        randomNumInt: int
+        randomNumFloat: float
+        try:
+            randomNumInt = random.randint(int(ask.split()[1]), int(ask.split()[2]))
+            print(randomNumInt)
+        except ValueError:
+            try:
+                randomNumFloat = random.uniform(float(ask.split()[1]), float(ask.split()[2]))
+                print(randomNumFloat)
+            except:
+                print("Don't Put a text in the number's spot! if not, type help.")
+        except:
+            print("Please put 2 numbers to be able to do the randomaising! If not, type help.")
+    elif cmd == "find":
+        token = ask.split()[1:]
+        try:
+            datass = " ".join(token)
+        except IndexError:
+            print("Please put a flie name and flie extension. if not, type help.")
+        
+        if os_ver == "Windows":
+            os.system(f'powershell "gdr -PSProvider FileSystem | % {{ Get-ChildItem -Path $_.Root -Filter {datass} -Recurse -ErrorAction SilentlyContinue }} | Select-Object FullName"')
+        else:
+            os.system(f"sudo find / -name {datass} 2>/dev/null")
+    elif cmd == "ascii":
+        token = ask.split()[1:]
+        try:
+            datasss = " ".join(token)
+        except IndexError:
+            print("Please put text. if not, type help.")
+        
+        word = art.text2art(datasss)
+        print(word)
     elif cmd == "credit":
         print("Created by Lospros48483 in Github")
