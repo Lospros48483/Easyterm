@@ -3,13 +3,15 @@ import platform
 import shutil
 import pyttsx3
 import threading
-import ctypes
+import subprocess
+import sys
+import tkinter as tk
+from tkinter import messagebox
 import qrcode
 import cv2
 from pyzbar.pyzbar import decode
 import random
 import art
-
 
 ask = ""
 temp = ""
@@ -22,7 +24,7 @@ try:
 except:
     usurname = os.environ['USER']
 dir = os.getcwd()
-version = "1.1.0"
+version = "1.2.0"
 
 def clear() -> None:
     if os_ver == "Windows":
@@ -53,8 +55,87 @@ def talk(text: str) -> None:
 
     threading.Thread(target=speak).start()
     
-def Message(title, text, style):
-    return ctypes.windll.user32.MessageBoxW(0, text, title, style)
+def show_message(title, text, style=0):
+    root = None
+    try:
+        root = tk.Tk()
+        root.withdraw()
+        try:
+            root.attributes("-topmost", True)
+        except Exception:
+            pass
+        try:
+            # Map style to the messagebox function name
+            func_map = {
+                0: 'showinfo',
+                1: 'askokcancel',
+                2: 'askretrycancel',
+                3: 'askyesnocancel',
+                4: 'askyesno',
+                5: 'askretrycancel',
+                6: 'askyesnocancel'
+            }
+            func_name = func_map.get(style, 'showinfo')
+
+            dialog_code = (
+                "import tkinter as tk\n"
+                "from tkinter import messagebox\n"
+                "root = tk.Tk()\n"
+                "root.withdraw()\n"
+                "try:\n"
+                "    root.attributes(\"-topmost\", True)\n"
+                "except Exception:\n"
+                "    pass\n"
+                f"messagebox.{func_name}({repr(title)}, {repr(text)})\n"
+                "try:\n"
+                "    root.destroy()\n"
+                "except Exception:\n"
+                "    pass\n"
+            )
+
+            subprocess.Popen([sys.executable, "-c", dialog_code], start_new_session=True)
+            return
+        except Exception:
+            try:
+                root = tk.Tk()
+                root.withdraw()
+                try:
+                    root.attributes("-topmost", True)
+                except Exception:
+                    pass
+
+                if style == 0:
+                    messagebox.showinfo(title, text)
+                elif style == 1:
+                    messagebox.askokcancel(title, text)
+                elif style == 2:
+                    messagebox.askretrycancel(title, text)
+                elif style == 3:
+                    messagebox.askyesnocancel(title, text)
+                elif style == 4:
+                    messagebox.askyesno(title, text)
+                elif style == 5:
+                    messagebox.askretrycancel(title, text)
+                elif style == 6:
+                    messagebox.askyesnocancel(title, text)
+                else:
+                    messagebox.showinfo(title, text)
+            except Exception:
+                pass
+            finally:
+                try:
+                    root.destroy()
+                except Exception:
+                    pass
+    except tk.TclError:
+        pass
+    finally:
+        if root is not None:
+            try:
+                root.destroy()
+            except Exception:
+                pass
+
 
 print('If you need help, type "help".')
 while not ask == "exit":
@@ -122,7 +203,13 @@ credit -> Tell's you who did it! Command: credit
 qr -> You can creat qr codes of any type, it will go to your selected dirrectory! Command: qr ([text or url])
 qrscan -> You can scan qr codes to get it's info, it will go to your selected dirrectory to get the file! Command: qrscan [file name + extension]
 random -> You can random any number but no text! Command: random [first number] [second number]
-find -> You can look up the file name with extension and find the dirrectory it is! Command: find [file name + extension]""")
+find -> You can look up the file name with extension and find the dirrectory it is! Command: find [file name + extension]
+ascii -> You can have ascii art in seconds! Command: ascii (your text)
+add -> So you can add numbers! Command: add (1 number to add) (2 number to add)
+sub -> So you can substract numbers! Command: sub (1 number to substract) (2 number to substract)
+mult -> So you can multiply numbers! Command: mult (1 number to multiply) (2 number to multiply)
+div -> So you can divide numbers! Command: div (1 number to divide) (2 number to divide)
+infoweb -> You can see the websides code (HTML). Command: infoweb [webside to get the code]""")
     elif cmd == "clear":
         clear()
     elif cmd == "edit":
@@ -133,6 +220,8 @@ find -> You can look up the file name with extension and find the dirrectory it 
                 os.system("edit") 
         else:
             try:
+                os.system(f"vim {dir}/{ask.split()[1]}")
+            except OSError:
                 os.system(f"vim {ask.split()[1]}")
             except IndexError:
                 os.system("vim")
@@ -269,7 +358,7 @@ find -> You can look up the file name with extension and find the dirrectory it 
                 print("Style must be an integer. See help for valid styles. If not, type help.")
             else:
                 text = "".join(tokens[clauses_end + 1:-1])
-                Message(title, text, style)
+                show_message(title, text, style)
     elif cmd == "download":
         try:
             os.system(f"curl -o {dir}/{ask.split()[2]} {ask.split()[1]}")
@@ -403,5 +492,74 @@ find -> You can look up the file name with extension and find the dirrectory it 
         
         word = art.text2art(datasss)
         print(word)
+    elif cmd == "add":
+        token = ask.split()[1:]
+        if len(token) < 2:
+            print("Please provide two numbers. If not, type help.")
+        else:
+            try:
+                a = float(token[0])
+                b = float(token[1])
+            except ValueError:
+                print("Please put a number, not text! If not, type help.")
+            else:
+                s = a + b
+                if s.is_integer():
+                    print(int(s))
+                else:
+                    print(s)
+    elif cmd == "sub":
+        token = ask.split()[1:]
+        if len(token) < 2:
+            print("Please provide two numbers. If not, type help.")
+        else:
+            try:
+                a = float(token[0])
+                b = float(token[1])
+            except ValueError:
+                print("Please put a number, not text! If not, type help.")
+            else:
+                s = a - b
+                if s.is_integer():
+                    print(int(s))
+                else:
+                    print(s)
+    elif cmd == "mult":
+        token = ask.split()[1:]
+        if len(token) < 2:
+            print("Please provide two numbers. If not, type help.")
+        else:
+            try:
+                a = float(token[0])
+                b = float(token[1])
+            except ValueError:
+                print("Please put a number, not text! If not, type help.")
+            else:
+                s = a * b
+                if s.is_integer():
+                    print(int(s))
+                else:
+                    print(s)
+    elif cmd == "div":
+        token = ask.split()[1:]
+        if len(token) < 2:
+            print("Please provide two numbers. If not, type help.")
+        else:
+            try:
+                a = float(token[0])
+                b = float(token[1])
+            except ValueError:
+                print("Please put a number, not text! If not, type help.")
+            else:
+                s = a / b
+                if s.is_integer():
+                    print(int(s))
+                else:
+                    print(s)
+    elif cmd == "infoweb":
+        try:
+            os.system(f"curl {tokens[1]}")
+        except IndexError:
+            print("Please put the webside link (URL). If not, type help.")
     elif cmd == "credit":
         print("Created by Lospros48483 in Github")
