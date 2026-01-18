@@ -1,22 +1,21 @@
 import os
-import platform
+from platform import system
 import shutil
-import pyttsx3
-import threading
-import subprocess
-import sys
-import tkinter as tk
-from tkinter import messagebox
-import qrcode
-import cv2
+from pyttsx3 import init
+from threading import Thread
+from subprocess import Popen
+from sys import executable
+from qrcode import make
+from cv2 import imread
 from pyzbar.pyzbar import decode
-import random
-import art
+from random import uniform, randint
+from art import text2art
+from pathlib import Path
 
 ask = ""
 temp = ""
 write = True
-os_ver = platform.system()
+os_ver = system()
 usurname = ""
 history_list = []
 try:
@@ -24,7 +23,7 @@ try:
 except:
     usurname = os.environ['USER']
 dir = os.getcwd()
-version = "1.2.0"
+version = "1.3.0"
 
 def clear() -> None:
     if os_ver == "Windows":
@@ -48,14 +47,20 @@ def history(num=None) -> None:
 
 def talk(text: str) -> None:
     def speak():
-        engine = pyttsx3.init()
+        engine = init()
         engine.setProperty('rate', 85) 
         engine.say(text)
         engine.runAndWait()
 
-    threading.Thread(target=speak).start()
+    Thread(target=speak).start()
     
 def show_message(title, text, style=0):
+    try:
+        import tkinter as tk
+        from tkinter import messagebox
+    except:
+        print("You don't have GUI, So this command can't run!")
+        return
     root = None
     try:
         root = tk.Tk()
@@ -93,7 +98,7 @@ def show_message(title, text, style=0):
                 "    pass\n"
             )
 
-            subprocess.Popen([sys.executable, "-c", dialog_code], start_new_session=True)
+            Popen([executable, "-c", dialog_code], start_new_session=True)
             return
         except Exception:
             try:
@@ -149,7 +154,10 @@ while not ask == "exit":
 
     if cmd == "go":
         try:
-            dir = ask.split()[1]
+            if os.path.exists(ask.split()[1]):
+                dir = ask.split()[1]
+            else:
+                print("Please put a directory! If not, type help.")
         except IndexError:
             print("Can you put a directory? If not, type help.")
     elif cmd == "creat":
@@ -178,13 +186,14 @@ while not ask == "exit":
             print("Switch the order of the file and file type.")
     elif cmd == "help":
         print("""help -> See what commands exist and do. Command: help
+exit -> To exit the program! Command: exit
 go -> Goes into the directory that you say. Command: go [directory]
 creat -> You can create a folder or file with this command with any name using the already directory. Command: creat [type] [name + file extension]
 clear -> You can clear your screen with this command. Command: clear
 edit -> You can edit files with this command (to get  in linux or MacOS press: esc + : + q. In windows: ctrl + q). Command: edit [optional directory]
 list -> We you can see what files you have in a directory selected or a custom one. Command: list [optional directory]
 delet -> You can delete files or folders with this command. Command: delet [type] [file or folder or directory]
-rename -> You can rename files however you want. Command: rename [directory with original file name with extension] [new file name with extension]
+rename -> You can rename files however you want. Command: rename [optional directory with original file name with extension] [optional directory with new file name with extension]
 copy -> You can copy any file to another directory. Command: copy [directory with file with the extension] [directory where it is going to be]
 ping -> Run test to see your network traffic. Command: ping [a website]
 history -> If you put only history, it gives you a list of numbers of that you can choose from to do that command. Command: history [optional number command]
@@ -209,7 +218,9 @@ add -> So you can add numbers! Command: add (1 number to add) (2 number to add)
 sub -> So you can substract numbers! Command: sub (1 number to substract) (2 number to substract)
 mult -> So you can multiply numbers! Command: mult (1 number to multiply) (2 number to multiply)
 div -> So you can divide numbers! Command: div (1 number to divide) (2 number to divide)
-infoweb -> You can see the websides code (HTML). Command: infoweb [webside to get the code]""")
+infoweb -> You can see the websides code (HTML). Command: infoweb [webside to get the code]
+home -> Goes to the home directory. Command: home
+which -> To see where a command is in the computer. Command: which [command]""")
     elif cmd == "clear":
         clear()
     elif cmd == "edit":
@@ -275,7 +286,13 @@ infoweb -> You can see the websides code (HTML). Command: infoweb [webside to ge
                 print("Put file or folder and then the file name or the folder name. If not, type help.")
     elif cmd == "rename":
         try:
-            os.rename(ask.split()[1], ask.split()[2])
+            try:
+                os.rename(ask.split()[1], ask.split()[2])
+            except OSError:
+                if os_ver == "Windows":
+                    os.rename(rf"{dir}\{ask.split()[1]}", rf"{dir}\{ask.split()[2]}")
+                else:
+                    os.rename(rf"{dir}/{ask.split()[1]}", rf"{dir}/{ask.split()[2]}")
         except IndexError:
             print("Please put a directory. If not, type help.")
         except FileNotFoundError:
@@ -293,7 +310,9 @@ infoweb -> You can see the websides code (HTML). Command: infoweb [webside to ge
         except shutil.SameFileError:
             print("This file already exists! If not, type help.")
         except FileExistsError:
-            print("The destination already exists! If not, type help.")      
+            print("The destination already exists! If not, type help.")
+        except FileNotFoundError:
+            print("The file or directory you have put does not exist! If not, type help.")
     elif cmd == "ping":
         try:
             if os_ver == "Windows":
@@ -361,7 +380,16 @@ infoweb -> You can see the websides code (HTML). Command: infoweb [webside to ge
                 show_message(title, text, style)
     elif cmd == "download":
         try:
-            os.system(f"curl -o {dir}/{ask.split()[2]} {ask.split()[1]}")
+            if os_ver == "Windows":
+                try:
+                    os.system(rf"curl -o {dir}\{ask.split()[2]} {ask.split()[1]}")
+                except OSError:
+                    os.system(f"curl -o {ask.split()[2]} {ask.split()[1]}")
+            else:
+                try:
+                    os.system(f"curl -o {dir}/{ask.split()[2]} {ask.split()[1]}")
+                except OSError:
+                    os.system(f"curl -o {ask.split()[2]} {ask.split()[1]}")
         except IndexError:
             print("Please put a URL. If not, type help.")
     elif cmd == "remote":
@@ -426,7 +454,7 @@ infoweb -> You can see the websides code (HTML). Command: infoweb [webside to ge
             else:
                 data = ''
         
-        img = qrcode.make(data)
+        img = make(data)
         
         if os_ver == "Windows":
             with open(rf"{dir}\qrcode.png", "wb") as f:
@@ -442,9 +470,9 @@ infoweb -> You can see the websides code (HTML). Command: infoweb [webside to ge
             print("Please put a flie name and flie extension. if not, type help.")
         
         if os_ver == "Windows":
-            image = cv2.imread(rf"{dir}\{datas}")
+            image = imread(rf"{dir}\{datas}")
         else:
-            image = cv2.imread(f"{dir}/{datas}")
+            image = imread(f"{dir}/{datas}")
 
         if image is None:
             print("Could not load image. Please provide a valid file or go to the directorry. If not, type help.")
@@ -462,11 +490,11 @@ infoweb -> You can see the websides code (HTML). Command: infoweb [webside to ge
         randomNumInt: int
         randomNumFloat: float
         try:
-            randomNumInt = random.randint(int(ask.split()[1]), int(ask.split()[2]))
+            randomNumInt = randint(int(ask.split()[1]), int(ask.split()[2]))
             print(randomNumInt)
         except ValueError:
             try:
-                randomNumFloat = random.uniform(float(ask.split()[1]), float(ask.split()[2]))
+                randomNumFloat = uniform(float(ask.split()[1]), float(ask.split()[2]))
                 print(randomNumFloat)
             except:
                 print("Don't Put a text in the number's spot! if not, type help.")
@@ -490,7 +518,7 @@ infoweb -> You can see the websides code (HTML). Command: infoweb [webside to ge
         except IndexError:
             print("Please put text. if not, type help.")
         
-        word = art.text2art(datasss)
+        word = text2art(datasss)
         print(word)
     elif cmd == "add":
         token = ask.split()[1:]
@@ -561,5 +589,12 @@ infoweb -> You can see the websides code (HTML). Command: infoweb [webside to ge
             os.system(f"curl {tokens[1]}")
         except IndexError:
             print("Please put the webside link (URL). If not, type help.")
+    elif cmd == "home":
+        dir = str(Path.home())
+    elif cmd == "which":
+        if os_ver == "Windows":
+            os.system(f"where {ask.split()[1]}")
+        else:
+            os.system(f"which {ask.split()[1]}")
     elif cmd == "credit":
         print("Created by Lospros48483 in Github")
