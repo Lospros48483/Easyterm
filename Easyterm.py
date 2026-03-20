@@ -4,6 +4,7 @@ import shutil
 from pyttsx3 import init
 from threading import Thread
 from subprocess import Popen
+from subprocess import run
 from sys import executable
 from qrcode import make
 from cv2 import imread
@@ -13,6 +14,7 @@ from art import text2art
 from pathlib import Path
 
 ask = ""
+count = 0
 temp = ""
 write = True
 os_ver = system()
@@ -23,13 +25,14 @@ try:
 except:
     usurname = os.environ['USER']
 dir = os.getcwd()
-version = "1.3.0"
+version = "1.4.0"
+adb_dir = ""
 
 def clear() -> None:
     if os_ver == "Windows":
-        os.system("powershell clear")
+        run("powershell clear", shell=True)
     else:
-        os.system("clear")
+        run("clear", shell=True)
 
 def history(num=None) -> None:
     global ask
@@ -154,8 +157,8 @@ while not ask == "exit":
 
     if cmd == "go":
         try:
-            if os.path.exists(ask.split()[1]):
-                dir = ask.split()[1]
+            if os.path.exists(" ".join(ask.split()[1:])):
+                dir = " ".join(ask.split()[1:])
             else:
                 print("Please put a directory! If not, type help.")
         except IndexError:
@@ -169,9 +172,9 @@ while not ask == "exit":
         if file_type == "file":
             try:
                 if os_ver == "Windows":
-                    os.system(rf"powershell ni {dir}\{file_name} -ItemType File")
+                    run(rf"powershell ni {dir}\{file_name} -ItemType File", shell=True)
                 else:
-                    os.system(f"touch {dir}/{file_name}")
+                    run(f"touch {dir}/{file_name}", shell=True)
             except OSError:
                 print(f"Tried to create a file in {dir} but it went wrong. If not, type help.")
         elif file_type == "folder":
@@ -220,68 +223,74 @@ mult -> So you can multiply numbers! Command: mult (1 number to multiply) (2 num
 div -> So you can divide numbers! Command: div (1 number to divide) (2 number to divide)
 infoweb -> You can see the websides code (HTML). Command: infoweb [webside to get the code]
 home -> Goes to the home directory. Command: home
-which -> To see where a command is in the computer. Command: which [command]""")
+which -> To see where a command is in the computer. Command: which [command]
+pip -> To install or uninstall python libraries! Command: pip [install or uninstall] [Python libray name]
+count -> Counts many numbers you want. Command: count [number to count, needs to be number]
+adb -> Enables you to use android tools easily with normal commands! Command: adb [normal command]
+createxe -> Lets you creat an file of the terminal, you will need to put your directory with go and put it in the directory with the python program and icon. Command: createxe
+reboot -> reboot's your computer. Command: reboot
+shutdown -> shutdown's your computer. Command: shutdown""")
     elif cmd == "clear":
         clear()
     elif cmd == "edit":
         if os_ver == "Windows":
             try:
-                os.system(f"edit {ask.split()[1]}")
+                run(f"edit {ask.split()[1]}", shell=True)
             except IndexError:
-                os.system("edit") 
+                run("edit", shell=True) 
         else:
             try:
-                os.system(f"vim {dir}/{ask.split()[1]}")
+                run(f"vim {dir}/{ask.split()[1]}", shell=True)
             except OSError:
-                os.system(f"vim {ask.split()[1]}")
+                run(f"vim {ask.split()[1]}", shell=True)
             except IndexError:
-                os.system("vim")
+                run("vim")
     elif cmd == "list":
         if os_ver == "Windows":
             try:
-                os.system(f"dir {ask.split()[1]}")
+                run(f'dir "{ask.split()[1]}"', shell=True)
             except IndexError:
-                os.system(f"dir {dir}")
+                run(f'dir "{dir}"', shell=True)
             except OSError:
                 print("Please put a valid directory. If not, type help.")
         else:
             try:
-                os.system(f"ls {ask.split()[1]}")
+                run(f"ls {ask.split()[1]}", shell=True)
             except IndexError:
-                os.system(f"ls {dir}")
+                run(f"ls {dir}")
     elif cmd == "delet":
         if os_ver == "Windows":
             if ask.split()[1] == "folder":
                 try:
-                    os.system(rf"rmdir /S /Q {dir}\{ask.split()[2]}")
+                    run(rf"rmdir /S /Q {dir}\{ask.split()[2]}", shell=True)
                 except IndexError:
                     print("Please put a folder name. If not, type help.")
                 except OSError:
-                    os.system(f"rmdir /S /Q {ask.split()[2]}")
+                    run(f"rmdir /S /Q {ask.split()[2]}", shell=True)
             elif ask.split()[1] == "file":
                 try:
-                    os.system(rf"del /Q {dir}\{ask.split()[2]}")
+                    run(rf"del /Q {dir}\{ask.split()[2]}", shell=True)
                 except IndexError:
                     print("Please put a file name. If not, type help.")
                 except OSError:
-                    os.system(f"del /Q {ask.split()[2]}")
+                    run(f"del /Q {ask.split()[2]}", shell=True)
             else:
                 print("Put file or folder and then the file name or the folder name. If not, type help.")
         else:
             if ask.split()[1] == "file":
                 try:
-                    os.system(rf"rm {dir}/{ask.split()[2]}")
+                    run(rf"rm {dir}/{ask.split()[2]}", shell=True)
                 except IndexError:
                     print("Please put a file name. If not, type help.")
                 except OSError:
-                    os.system(f"rm {ask.split()[2]}")
+                    run(f"rm {ask.split()[2]}", shell=True)
             elif ask.split()[1] == "folder":
                 try:
-                    os.system(rf"rm -r {dir}/{ask.split()[2]}")
+                    run(rf"rm -r {dir}/{ask.split()[2]}", shell=True)
                 except IndexError:
                     print("Please put a folder name. If not, type help.")
                 except OSError:
-                    os.system(f"rm -r {ask.split()[2]}")
+                    run(f"rm -r {ask.split()[2]}", shell=True)
             else:
                 print("Put file or folder and then the file name or the folder name. If not, type help.")
     elif cmd == "rename":
@@ -316,9 +325,9 @@ which -> To see where a command is in the computer. Command: which [command]""")
     elif cmd == "ping":
         try:
             if os_ver == "Windows":
-                os.system(f"ping -n 5 {ask.split()[1]}")
+                run(f"ping -n 5 {ask.split()[1]}", shell=True)
             else:
-                os.system(f"ping -c 5 {ask.split()[1]}")
+                run(f"ping -c 5 {ask.split()[1]}", shell=True)
         except IndexError:
                 print("Please put a URL. If not, type help.")
     elif cmd == "os":
@@ -341,14 +350,14 @@ which -> To see where a command is in the computer. Command: which [command]""")
     elif cmd == "python":
         if os_ver == "Windows":
             try:
-                os.system(f"python {ask.split()[1]}")
+                run(f"python {ask.split()[1]}", shell=True)
             except IndexError:
-                os.system("python")
+                run("python", shell=True)
         else:
             try:
-                os.system(f"python3 {ask.split()[1]}")
+                run(f"python3 {ask.split()[1]}", shell=True)
             except IndexError:
-                os.system("python3")
+                run("python3", shell=True)
     elif cmd == "message":
         length: int
         tokens = list(ask)
@@ -382,43 +391,43 @@ which -> To see where a command is in the computer. Command: which [command]""")
         try:
             if os_ver == "Windows":
                 try:
-                    os.system(rf"curl -o {dir}\{ask.split()[2]} {ask.split()[1]}")
+                    run(rf"curl -o {dir}\{ask.split()[2]} {ask.split()[1]}", shell=True)
                 except OSError:
-                    os.system(f"curl -o {ask.split()[2]} {ask.split()[1]}")
+                    run(f"curl -o {ask.split()[2]} {ask.split()[1]}", shell=True)
             else:
                 try:
-                    os.system(f"curl -o {dir}/{ask.split()[2]} {ask.split()[1]}")
+                    run(f"curl -o {dir}/{ask.split()[2]} {ask.split()[1]}", shell=True)
                 except OSError:
-                    os.system(f"curl -o {ask.split()[2]} {ask.split()[1]}")
+                    run(f"curl -o {ask.split()[2]} {ask.split()[1]}", shell=True)
         except IndexError:
             print("Please put a URL. If not, type help.")
     elif cmd == "remote":
         try:
-            os.system(f"ssh {ask.split()[1]}")
+            run(f"ssh {ask.split()[1]}", shell=True)
         except IndexError:
             print("Please put a ip addres. If not, type help.")
     elif cmd == "kill":
         try:
             if os_ver == "Windows":
-                os.system(f"taskkill /F /IM {ask.split()[1]}.exe")
+                run(f"taskkill /F /IM {ask.split()[1]}.exe", shell=True)
             else:
-                os.system(f"pkill {ask.split()[1]}")
+                run(f"pkill {ask.split()[1]}", shell=True)
         except IndexError:
             print("Please put a running program. If not, type help.")
     elif cmd == "unzip":
         if os_ver == "Windows":
             os.mkdir(rf"{dir}\Unzip")
             try:
-                os.system(rf"tar -xf {dir}\{ask.split()[1]} -C {dir}\Unzip")
+                run(rf"tar -xf {dir}\{ask.split()[1]} -C {dir}\Unzip", shell=True)
             except OSError:
-                os.system(rf"tar -xf {ask.split()[1]} -C {ask.split()[1]}")
+                run(rf"tar -xf {ask.split()[1]} -C {ask.split()[1]}", shell=True)
             except IndexError:
                 print("Please put a .zip file. If not, type help.")
         else:
             try:
-                os.system(rf"unzip {dir}/{ask.split()[1]}")
+                run(rf"unzip {dir}/{ask.split()[1]}", shell=True)
             except OSError:
-                os.system(rf"unzip {ask.split()[1]}")
+                run(rf"unzip {ask.split()[1]}", shell=True)
             except IndexError:
                 print("Please put a .zip file. If not, type help.")
     elif cmd == "ver":
@@ -426,11 +435,11 @@ which -> To see where a command is in the computer. Command: which [command]""")
     elif cmd == "open":
         try:
             if os_ver == "Windows":
-                os.system(f"start {ask.split()[1]}")
+                run(f"start {ask.split()[1]}", shell=True)
             elif os_ver == "Linux":
-                os.system(f"xdg-open {ask.split()[1]}")
+                run(f"xdg-open {ask.split()[1]}", shell=True)
             else:
-                os.system(f"open {ask.split()[1]}")
+                run(f"open {ask.split()[1]}", shell=True)
         except IndexError:
             print('Please put a file or a URL with "www.". If not, type help.')
     elif cmd == "qr":
@@ -508,9 +517,9 @@ which -> To see where a command is in the computer. Command: which [command]""")
             print("Please put a flie name and flie extension. if not, type help.")
         
         if os_ver == "Windows":
-            os.system(f'powershell "gdr -PSProvider FileSystem | % {{ Get-ChildItem -Path $_.Root -Filter {datass} -Recurse -ErrorAction SilentlyContinue }} | Select-Object FullName"')
+            run(f'powershell "gdr -PSProvider FileSystem | % {{ Get-ChildItem -Path $_.Root -Filter {datass} -Recurse -ErrorAction SilentlyContinue }} | Select-Object FullName"', shell=True)
         else:
-            os.system(f"sudo find / -name {datass} 2>/dev/null")
+            run(f"sudo find / -name {datass} 2>/dev/null", shell=True)
     elif cmd == "ascii":
         token = ask.split()[1:]
         try:
@@ -586,15 +595,84 @@ which -> To see where a command is in the computer. Command: which [command]""")
                     print(s)
     elif cmd == "infoweb":
         try:
-            os.system(f"curl {tokens[1]}")
+            run(f"curl {tokens[1]}", shell=True)
         except IndexError:
             print("Please put the webside link (URL). If not, type help.")
     elif cmd == "home":
         dir = str(Path.home())
     elif cmd == "which":
+        try:
+            if os_ver == "Windows":
+                run(f"where {ask.split()[1]}", shell=True)
+            else:
+                run(f"which {ask.split()[1]}", shell=True)
+        except IndexError:
+            print("Please put what you want to find the command directory. If not, type help.")
+    elif cmd == "pip":
+        try:
+            if os_ver == "Windows":
+                run(f"py -m pip {ask.split()[1]} {ask.split()[2]}", shell=True)
+            else:
+                run(f"pip {ask.split()[1]} {ask.split()[2]}", shell=True)
+        except IndexError:
+            print("Please put install or unistall and the pakage name. If not, type help.")
+    elif cmd == "count":
+        try:
+            count += int(ask.split()[1])
+            print(count)
+        except IndexError:
+            print("Please put a number. If not, type help.")
+        except ValueError:
+            print("Please put a number and not text! If not, type help.")
+    elif cmd == "adb":
+        if adb_dir == "":
+            adb_dir = input("What is the directory where is the adb tools: ")
+            trying = False
+            while not trying == True:
+                try:
+                    run(fr"{adb_dir}\adb.exe", shell=True)
+                    trying = True
+                except OSError:
+                    adb_dir = input("The directory you gave was wronge. What is the directory where is the adb tools: ")
+                    trying = False
+        
+        try:
+            run(fr"{adb_dir}\adb.exe {" ".join(ask.split()[1:])}", shell=True)
+        except IndexError:
+            print("Here are some commands: ")
+            run(fr"{adb_dir}\adb.exe")
+    elif cmd == "rust":
         if os_ver == "Windows":
-            os.system(f"where {ask.split()[1]}")
+            rustc_path = shutil.which('rustc')
+            if rustc_path is None:
+                rustc_path = rf"{os.environ['USERPROFILE']}\.cargo\bin\rustc.exe"
+            try:
+                run(f'"{rustc_path}" {ask.split()[1]}', shell=True)
+            except IndexError:
+                run(f'"{rustc_path}"', shell=True)
         else:
-            os.system(f"which {ask.split()[1]}")
+            try:
+                run(f"rustc {ask.split()[1]}", shell=True)
+            except IndexError:
+                run("rustc", shell=True)
+    elif cmd == "createxe":
+        if os_ver == "Windows":
+            run(fr"python -m PyInstaller --onefile --icon={dir}\icon.png --collect-all pyzbar {dir}\Easyterm.py", shell=True)
+            shutil.rmtree(fr"{dir}\build")
+            os.remove(fr"{dir}\Easyterm.spec")
+        else:
+            run(f"python3 -m PyInstaller --onefile --icon={dir}/icon.png --collect-all pyzbar {dir}/Easyterm.py", shell=True)
+            shutil.rmtree(fr"{dir}/build")
+            os.remove(fr"{dir}/Easyterm.spec")
+    elif cmd == "reboot":
+        if os_ver == "Windows":
+            run("shutdown /r /t 0")
+        else:
+            run("sudo reboot")
+    elif cmd == "shutdown":
+        if os_ver == "Windows":
+            run("shutdown /s /t 0")
+        else:
+            run("sudo shutdown -h now")
     elif cmd == "credit":
         print("Created by Lospros48483 in Github")
