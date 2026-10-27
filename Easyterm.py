@@ -12,6 +12,8 @@ from pyzbar.pyzbar import decode
 from random import uniform, randint
 from art import text2art
 from pathlib import Path
+import yt_dlp
+import math
 
 ask = ""
 count = 0
@@ -25,7 +27,7 @@ try:
 except:
     usurname = os.environ['USER']
 dir = os.getcwd()
-version = "1.4.0"
+version = "1.5.0"
 adb_dir = ""
 
 def clear() -> None:
@@ -216,11 +218,11 @@ qr -> You can creat qr codes of any type, it will go to your selected dirrectory
 qrscan -> You can scan qr codes to get it's info, it will go to your selected dirrectory to get the file! Command: qrscan [file name + extension]
 random -> You can random any number but no text! Command: random [first number] [second number]
 find -> You can look up the file name with extension and find the dirrectory it is! Command: find [file name + extension]
-ascii -> You can have ascii art in seconds! Command: ascii (your text)
-add -> So you can add numbers! Command: add (1 number to add) (2 number to add)
-sub -> So you can substract numbers! Command: sub (1 number to substract) (2 number to substract)
-mult -> So you can multiply numbers! Command: mult (1 number to multiply) (2 number to multiply)
-div -> So you can divide numbers! Command: div (1 number to divide) (2 number to divide)
+ascii -> You can have ascii art in seconds! Command: ascii [your text]
+add -> So you can add numbers! Command: add [1 number to add] [2 number to add]
+sub -> So you can substract numbers! Command: sub [1 number to substract] [2 number to substract]
+mult -> So you can multiply numbers! Command: mult [1 number to multiply] [2 number to multiply]
+div -> So you can divide numbers! Command: div [1 number to divide] [2 number to divide]
 infoweb -> You can see the websides code (HTML). Command: infoweb [webside to get the code]
 home -> Goes to the home directory. Command: home
 which -> To see where a command is in the computer. Command: which [command]
@@ -229,7 +231,10 @@ count -> Counts many numbers you want. Command: count [number to count, needs to
 adb -> Enables you to use android tools easily with normal commands! Command: adb [normal command]
 createxe -> Lets you creat an file of the terminal, you will need to put your directory with go and put it in the directory with the python program and icon. Command: createxe
 reboot -> reboot's your computer. Command: reboot
-shutdown -> shutdown's your computer. Command: shutdown""")
+shutdown -> shutdown's your computer. Command: shutdown
+youtube -> So you can download youtube videos for free! Command: youtube [URL of the video] [Optional: A directory, if not, it will chose the defult]
+pi -> It tells you the PI number. Command: pi
+round -> It can round numbers to the next number you chouse of decimal place. Command: round [Number to round] [How many decimal places]""")
     elif cmd == "clear":
         clear()
     elif cmd == "edit":
@@ -659,20 +664,64 @@ shutdown -> shutdown's your computer. Command: shutdown""")
         if os_ver == "Windows":
             run(fr"python -m PyInstaller --onefile --icon={dir}\icon.png --collect-all pyzbar {dir}\Easyterm.py", shell=True)
             shutil.rmtree(fr"{dir}\build")
+            print("Deleting unecesary files!")
             os.remove(fr"{dir}\Easyterm.spec")
         else:
             run(f"python3 -m PyInstaller --onefile --icon={dir}/icon.png --collect-all pyzbar {dir}/Easyterm.py", shell=True)
             shutil.rmtree(fr"{dir}/build")
+            print("Deleting unecesary files!")
             os.remove(fr"{dir}/Easyterm.spec")
     elif cmd == "reboot":
         if os_ver == "Windows":
-            run("shutdown /r /t 0")
+            run("shutdown /r /t 0", shell=True)
         else:
-            run("sudo reboot")
+            run("sudo reboot", shell=True)
     elif cmd == "shutdown":
         if os_ver == "Windows":
-            run("shutdown /s /t 0")
+            run("shutdown /s /t 0", shell=True)
         else:
-            run("sudo shutdown -h now")
+            run("sudo shutdown -h now", shell=True)
+    elif cmd == "vscode":
+        try:
+            try:
+                if os_ver == "Windows":
+                    run(fr"code {dir}\{ask.split()[1:]}", shell=True)
+                else:
+                    run(fr"code {dir}\{ask.split()[1:]}", shell=True)
+            except:
+                run(fr"code {ask.split()[1:]}", shell=True)
+        except:
+            run("code", shell=True)
+    elif cmd == "youtube":
+        try:
+            parts = ask.split()
+            url = parts[1]
+            output_dir = parts[2] if len(parts) > 2 else dir
+
+            # optional: make sure the directory exists
+            output_dir = os.path.abspath(output_dir)
+            os.makedirs(output_dir, exist_ok=True)
+
+            ydl_opts = {
+                'format': 'bestvideo[height<=1080]+bestaudio/best',
+                'outtmpl': str(Path(output_dir) / '%(title)s.%(ext)s'),
+            }
+
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl: #type: ignore
+                ydl.download([url])
+
+        except IndexError:
+            print("Please put a youtube URL. If not, type help.")
+        except Exception:
+            print("If it didn't work, it was because you need to update or install the library, yt_dlp.")
+    elif cmd == "pi":
+        print(math.pi)
+    elif cmd == "round":
+        try:
+            print(round(float(ask.split()[1]), int(ask.split()[2])))
+        except ValueError:
+           print("Please give a number and not text! If not, type help.")
+        except IndexError:
+            print("Plese put the number and how many spaces you want the number to round! if not, type help.")
     elif cmd == "credit":
         print("Created by Lospros48483 in Github")
